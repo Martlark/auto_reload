@@ -1,0 +1,51 @@
+#!/bin/bash
+
+LAST_UPDATE_TIME=0
+FOLDERS=". app app/templates static"
+TAIL=`tail /var/log/apache2/error.log`
+
+while true; do
+
+    UPDATE=false
+    for folder in ${FOLDERS}; do
+        for file in $folder/{.,}*; do
+            if [ ! -d "$file" ]; then
+                LASTCHAR=`echo "$file" | rev | cut -c 1`
+
+                if [[ "$LASTCHAR" =~ ^(\.|\*) ]] ; then
+                    FILEMOD=0
+                else
+                    FILEMOD=`stat -c %Y $file`
+
+                    if [ $LAST_UPDATE_TIME -eq 0 ]; then
+                        LAST_UPDATE_TIME=$FILEMOD
+                    fi
+
+                    if [ $FILEMOD -gt $LAST_UPDATE_TIME ]; then
+                        LAST_UPDATE_TIME=$FILEMOD
+                        UPDATE=true
+                        UPDATE_FILE=$file
+                    fi
+
+                fi
+            fi
+        done
+    done
+
+    if [ "$UPDATE" == "true" ]; then
+        echo "*** reload due to $UPDATE_FILE changing"
+        sudo service apache2 reload
+    fi
+
+    NEW_TAIL=`tail /var/log/apache2/error.log`
+
+    if [ "$TAIL" != "$NEW_TAIL" ] ; then
+        tail /var/log/apache2/error.log
+        TAIL=$NEW_TAIL
+    else
+        printf .
+    fi
+
+    sleep 30
+
+done
