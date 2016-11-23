@@ -1,8 +1,20 @@
 #!/bin/bash
 
+# apache example
+
+# FOLDERS=". app app/templates static"
+# TAIL_CMD="tail /var/log/apache2/error.log"
+# RESTART_CMD="sudo service apache restart"
+
+# docker-compose example
+
+FOLDERS="."
+TAIL_CMD="docker-compose logs --tail 20 playbot"
+RESTART_CMD="docker-compose up -d --build playbot"
+
 LAST_UPDATE_TIME=0
-FOLDERS=". app app/templates static"
-TAIL=`tail /var/log/apache2/error.log`
+SLEEP_TIME=30
+TAIL=`${TAIL_CMD}`
 
 while true; do
 
@@ -33,19 +45,19 @@ while true; do
     done
 
     if [ "$UPDATE" == "true" ]; then
-        echo "*** reload due to $UPDATE_FILE changing"
-        sudo service apache2 reload
+        echo "*** restart due to $UPDATE_FILE changing"
+        ${RESTART_CMD}
     fi
 
-    NEW_TAIL=`tail /var/log/apache2/error.log`
+    NEW_TAIL=`${TAIL_CMD}`
 
     if [ "$TAIL" != "$NEW_TAIL" ] ; then
-        tail /var/log/apache2/error.log
-        TAIL=$NEW_TAIL
+        ${TAIL_CMD}
+        TAIL=${NEW_TAIL}
     else
         printf .
     fi
 
-    sleep 30
+    sleep ${SLEEP_TIME}
 
 done
