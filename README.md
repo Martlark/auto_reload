@@ -1,2 +1,3 @@
 # auto_reload
-bash script to detect source changes and automatically reload apache
+
+Bash script to detect source changes in a list of folders and automatically reload apache, docker or any other system as configured.
