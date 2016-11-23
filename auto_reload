@@ -4,7 +4,7 @@
 
 # FOLDERS=". app app/templates static"
 # TAIL_CMD="tail /var/log/apache2/error.log"
-# RESTART_CMD="sudo service apache restart"
+# RESTART_CMD="sudo service apache2 reload"
 
 # docker-compose example
 
