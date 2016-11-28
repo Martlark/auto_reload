@@ -15,12 +15,14 @@ RESTART_CMD="docker-compose up -d --build playbot"
 LAST_UPDATE_TIME=0
 SLEEP_TIME=30
 TAIL=`${TAIL_CMD}`
+UPDATE=false
 
 while true; do
-
-    UPDATE=false
+    loop_count=0
     for folder in ${FOLDERS}; do
         for file in $folder/{.,}*; do
+            let loop_count=loop_count+1
+            echo -en "\r$loop_count"
             if [ ! -d "$file" ]; then
                 LASTCHAR=`echo "$file" | rev | cut -c 1`
 
@@ -47,6 +49,7 @@ while true; do
     if [ "$UPDATE" == "true" ]; then
         echo "*** restart due to $UPDATE_FILE changing"
         ${RESTART_CMD}
+        echo "Updated at $(date +"%r")"
     fi
 
     NEW_TAIL=`${TAIL_CMD}`
@@ -55,9 +58,32 @@ while true; do
         ${TAIL_CMD}
         TAIL=${NEW_TAIL}
     else
-        printf .
+        echo -en "\r$loop_count files checked"
+        sleep 5
+        echo -en "\r$                              "
     fi
-
-    sleep ${SLEEP_TIME}
-
+    UPDATE=false
+    loop_count=${SLEEP_TIME}
+    while [ ${loop_count} -gt 0 ]; do
+        echo -en "\r$loop_count  "
+        read -n 1 -t 1 command
+        case "${command}" in
+        "c")
+           break
+           ;;
+        "r")
+           UPDATE="true"
+           UPDATE_FILE="r command"
+           break
+           ;;
+        "p")
+           echo "Paused, press ENTER to continue"
+           read nothing
+           ;;
+        "q")
+           exit 1
+           ;;
+        esac
+        let loop_count=loop_count-1
+    done
 done
